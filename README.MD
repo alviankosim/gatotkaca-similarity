@@ -2,6 +2,9 @@
 
 a python implementation of journal similarity using TF-IDF and Cosine Similarity (including 2 keyword extraction method).
 
+## Demo
+![Gatotkaca Journal Similarity in action](./docs/demo.gif)
+
 ### The process outline
 - Data reading from CSV (from scopus1.csv)
 - Data preprocessing
