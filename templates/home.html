@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Hey, it's me @alviankosim -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="shortcut icon" href="/gatotkaca_se_favicon.png" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gatot Kaca | journal similarity & keywords</title>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta.2/css/bootstrap.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.16/dist/sweetalert2.min.css">
+    <style>
+        .main-input {
+            width: 600px;
+            padding: 9px 19px;
+            border-radius: 27px;
+            border-color: rgba(0, 0, 0, 0.5);
+            border-width: 1px;
+            text-align: left;
+            /* animation-duration: 5s; */
+            transition-duration: 0.3s;
+        }
+
+        .main-input:hover,
+        .main-input:focus {
+            box-shadow: 0px 10px 46px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .has-result {
+            border-radius: 27px 27px 0px 0px;
+            border-bottom-width: 0px;
+        }
+
+        .main-input:focus-visible {
+            outline: none;
+        }
+
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #d4d4d4;
+            border-bottom: none;
+            border-top: none;
+            z-index: 99;
+            /*position the autocomplete items to be the same width as the container:*/
+            top: 100%;
+            left: 0;
+            right: 0;
+        }
+
+        .autocomplete-items div {
+            padding: 5px;
+            cursor: pointer;
+            background-color: #fff;
+            border-bottom: 1px solid #d4d4d4;
+            text-align: left;
+            font-size: small;
+            overflow-x:hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .autocomplete-items div:hover {
+            /*when hovering an item:*/
+            background-color: #e9e9e9;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="navbar navbar-dark bg-dark box-shadow">
+            <div class="container d-flex justify-content-between">
+                <a href="#" class="navbar-brand d-flex align-items-center">
+                    <strong>Gatot Kaca</strong>&nbsp;-&nbsp;<small>the journal <span id="title_gk">similarity & keywords</span></small>
+                </a>
+            </div>
+            <div style="display: none;">
+                <label for="Use Search Engine" style="color: white;">
+                    <input type="checkbox" name="ase" id="ase">
+                    <span style="margin-left: 5px;">as search engine?</span>
+                </label>
+            </div>
+        </div>
+    </header>
+
+    <main role="main">
+
+        <section class="jumbotron text-center" style="min-height:calc(110vh - 137px)">
+            <div class="container">
+                <!-- <h1 class="jumbotron-heading">Gatot Kaca, Journal Search Engine</h1> -->
+                <img src="/gatotkaca_se_logo.png" width="500" alt="" srcset="">
+                <p class="lead text-muted">Using TF-IDF + Cosine Similarity for Document Similarity and keyword extraction (TextRank, KeyBert).</p>
+                <div style="position: relative;">
+                    <input id="main-search" class="main-input" autocomplete="off" type="text"
+                        placeholder="Input your query here">
+                    <div id="autocomplete-wrapper" class="autocomplete-items" style="width: 600px;margin: 0 auto;display: none;"></div>
+                </div>
+                <!-- <p>
+                    <a href="javascript:;" id="process" class="btn btn-primary my-2">Process existing docs</a>
+                </p> -->
+            </div>
+        </section>
+        <section id="result" style="display: none;min-height: 670px;">
+            <div class="container">
+                <h2 style="text-align: center;">Result for similarity</h2>
+                <p id="result-title" style="font-style: italic;" class="text-center"><i></i></p>
+
+                <div id="main-result"></div>
+                <div id="loading">
+                    <div style="
+                        align-items: center;
+                        justify-content: center;
+                        display: flex;
+                        height:500px;
+                    ">
+                        <img style="width: 25%;" src="/gatotkaca_loading.gif" alt="" srcset="">
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-muted">
+        <div class="container">
+            <p class="float-right">
+                <a href='javascript:window.scrollTo({top: 0, behavior: "smooth"});'>Back to top</a>
+            </p>
+            <p>Gatot Kaca</p>
+        </div>
+    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/holder/2.9.4/holder.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.13.0-next.1/esm/popper.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.16/dist/sweetalert2.all.min.js"></script>
+    <script>
+        var process = () => {
+            Swal.fire({
+                title: 'Please Wait !',
+                html: 'Data processing',// add html attribute if you want or remove
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                onBeforeOpen: () => {
+                    Swal.showLoading()
+                },
+            });
+            $.ajax({
+                url: 'http://127.0.0.1:3600/process',
+                method: 'POST',
+                data: {},
+                dataType: 'json'
+            }).then(o => {
+
+                Swal.close();
+            });
+        }
+        const renderAutocomplete = (titleDatas) => {
+            $('#autocomplete-wrapper').html('');
+            let html = '';
+            for (const key in titleDatas) {
+                if (Object.hasOwnProperty.call(titleDatas, key)) {
+                    const title = titleDatas[key];
+                    // console.log({ title });
+                    html += `
+                        <div data-id="${key}" class="journal-item">
+                            <strong>${title}</strong>
+                        </div>
+                    `;
+                }
+            }
+
+            $('#autocomplete-wrapper').html(html);
+        }
+        const doSearch = (q) => {
+            $.ajax({
+                url: 'http://127.0.0.1:3600/search',
+                method: 'GET',
+                data: { q },
+                dataType: 'json'
+            }).then(o => {
+                renderAutocomplete(Object.keys(o.Title).length > 0 ? o.Title : { 'not_found' : 'Not Found' });
+                $('#main-search').addClass('has-result')
+                $('#autocomplete-wrapper').slideDown(300);
+            });
+        }
+        $(document).ready(function () {
+            $('#main-search').focus();
+            $('#main-search').on('keydown', function (e) {
+                const querySearch = $(this).val();
+                if (e.which == 13) {
+                    if (!querySearch) {
+                        $('#main-search').removeClass('has-result');
+                        $('#autocomplete-wrapper').slideUp(300);
+                        renderAutocomplete({});
+                        return;
+                    }
+                    // not using search engine
+                    const checked = $('#ase').is(':checked');
+                    if (!checked) {
+                        doSearch(querySearch);
+                        return;
+                    }
+                    
+                    // using search engine show the result
+
+                }
+            })
+            $('#main-search').focusout(function(){
+                $('#main-search').removeClass('has-result');
+                $('#autocomplete-wrapper').slideUp(300);
+            });
+            $('#ase').change(function(){
+                const checked = $(this).is(':checked');
+                if(checked) {
+                    $('#title_gk').html('search engine');
+                } else {
+                    $('#title_gk').html('similarity and keywords');
+                }
+            });
+            $(document.body).on('click', '.journal-item', function(){
+                $('#main-result').slideUp();
+                $('#loading').slideDown();
+                
+                const daId = $(this).data('id');
+                const daQuery = $('#main-search').val();
+                const daTitle = $(this).find('strong').eq(0).text();
+                $('#result-title').html(daTitle);
+
+                $('#result').slideDown(300);
+                $('html, body').animate({
+                    scrollTop: $("#result").offset().top
+                }, 970);
+                $.ajax({
+                    url: 'http://127.0.0.1:3600/result',
+                    method: 'GET',
+                    data: { id: daId , q: daQuery},
+                    dataType: 'json'
+                }).then(o => {
+
+                    let html = '';
+                    o.result.forEach(item => {
+                        html += `
+                            <div class="item" style="padding: 10px; margin-bottom:10px; border: 1px solid rgba(0,0,0,0.3);border-radius:10px">
+                                <b>Title</b>: ${item.title}
+                                <br/><b>Similarity</b>: ${item.cos_sim_.toFixed(6)}
+                                <br/><b>Keyword Keybert</b>: ${item.keybert.join(', ')}
+                                <br/><b>Keyword Textrank</b>: ${item.textrank.join(', ')}
+                            </div>
+                        `;
+                    })
+
+                    $('#main-result').html(html);
+                    
+                    // additional loading for showing off the preload
+                    setTimeout(() => {
+                        $('#loading').slideUp(100, function(){
+                            $('#main-result').slideDown(950);
+                        });
+                    }, 1500);
+                });
+            })
+        })
+    </script>
+</body>
+
+</html>
